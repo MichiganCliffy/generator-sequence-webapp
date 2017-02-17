@@ -1,0 +1,14 @@
+{
+  "staging": {
+    "key": "",
+    "secret": "",
+    "bucket": "tbd-staging.chipotle.com",
+    "region": "us-west-2"
+  },
+  "production": {
+    "key": "",
+    "secret": "",
+    "bucket": "tbd.chipotle.com",
+    "region": "us-west-2"
+  }
+}

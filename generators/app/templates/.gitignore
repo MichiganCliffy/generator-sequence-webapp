@@ -1,0 +1,6 @@
+.sass-cache/
+node_modules/
+public/assets/css/
+public/assets/js/
+public/*.html
+aws.json
