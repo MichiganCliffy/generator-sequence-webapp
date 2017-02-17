@@ -31,6 +31,7 @@ To run the app:
 ```
 cd <app-name>
 npm install
+bundle install
 gulp
 ```
 
