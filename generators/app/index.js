@@ -2,6 +2,7 @@
 
 const Generator = require('yeoman-generator');
 const chalk = require('chalk');
+const mkdirp = require('mkdirp');
 const ncp = require('ncp').ncp;
 
 module.exports = class extends Generator {
@@ -26,16 +27,33 @@ module.exports = class extends Generator {
   }
 
   prompting() {
-    if (!this.options.appname) {
-      return this.prompt([{
-        type: 'input',
-        name: 'AppName',
-        message: 'App name: ',
-        default: 'sample-app'
-      }]).then((answers) => {
+    return this.prompt(this._getPrompts()).then((answers) => {
+      if (answers.AppName) {
         this.options.appname = answers.AppName;
-      });
+      }
+      this.options.install = answers.ShouldInstall;
+    });
+  }
+  _getPrompts() {
+    var namePrompt = {
+      type: 'input',
+      name: 'AppName',
+      message: 'App name: ',
+      default: 'sample-app'
+    };
+    var installPrompt = {
+      type: 'confirm',
+      name: 'ShouldInstall',
+      message: 'Run npm install after setup?',
+      default: true
+    };
+    var prompts = [];
+    if (!this.options.appname) {
+      prompts.push(namePrompt);
     }
+    prompts.push(installPrompt);
+
+    return prompts;
   }
 
   configuring() {
@@ -45,6 +63,8 @@ module.exports = class extends Generator {
   default() {}
 
   writing() {
+    mkdirp(this.destinationPath(this.options.appname));
+    this.destinationRoot(this.destinationPath(this.options.appname));
     this._writeTemplates();
     this._writeDir();
   }
@@ -75,13 +95,21 @@ module.exports = class extends Generator {
 
   // install dependencies based on project type
   install() {
-    this.installDependencies({npm: true, bower: false, yarn: false});
+    if (this.options.install) {
+      this.installDependencies({npm: true, bower: false, yarn: false});
+    }
   }
 
   end() {
+    var cmd;
+    if (this.options.install) {
+      cmd = 'cd ' + this.options.appname + ' && gulp';
+    } else {
+      cmd = 'cd ' + this.options.appname + ' && npm install && gulp';
+    }
     this.log(
-      this.options.appname + ' is ' + chalk.green('ready')
-      + '. Run ' + chalk.yellow('gulp') + ' to get started.'
+      chalk.yellow(this.options.appname) + ' is ' + chalk.green('ready')
+      + '. Run ' + chalk.yellow(cmd) + ' to get started.'
     );
   }
 };
