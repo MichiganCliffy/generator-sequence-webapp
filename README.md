@@ -1,6 +1,6 @@
 #Sequence Web app generator
 
-[Yeoman](https://github.com/yeoman/generator) generator that scaffolds out a React front-end web app using [gulp](http://gulpjs.com/).
+[Yeoman](https://github.com/yeoman/generator) generator that creates a React app using [gulp](http://gulpjs.com/) from scratch.
 
 ##Setup
 Install Yeoman:
@@ -24,4 +24,16 @@ Run the generator with `yo` to create a React app (this will create the project 
 yo sequence-webapp [<app-name>]
 ```
 
-The generated project structure can be viewed in `generator-sequence-webapp/generators/app/templates`.
+If you want to check out the project structure before generating one, you can view the project template in `generator-sequence-webapp/generators/app/templates`.
+
+To run the app:
+
+```
+cd <app-name>
+npm install
+gulp
+```
+
+##Features
+ES6<br/>
+Live reload
