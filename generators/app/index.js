@@ -2,13 +2,16 @@
 
 const Generator = require('yeoman-generator');
 const chalk = require('chalk');
-const mkdirp = require('mkdirp');
-const ncp = require('ncp').ncp;
+const fse = require('fs-extra');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
     super (args, opts);
+    this.option('babel');
+    this.argument('appname', { type: String, required: false });
+  }
 
+  initializing() {
     this.log(chalk.bold.green('   ____                                        '));
     this.log(chalk.bold.green('  / ___|  ___  __ _ _   _  ___ _ __   ___ ___  '));
     this.log(chalk.bold.green('  \\___ \\ / _ \\/ _\' | | | |/ _ \\ \'_ \\ / __/ _ \\ '));
@@ -16,11 +19,6 @@ module.exports = class extends Generator {
     this.log(chalk.bold.green('  |____/ \\___|\\__, |\\__,_|\\___|_| |_|\\___\\___| '));
     this.log(chalk.bold.green('                 |_|                           '));
 
-    this.option('babel');
-    this.argument('appname', { type: String, required: false});
-  }
-
-  initializing() {
     if (this.options.appname) {
       this.log(chalk.green('generating') + ' ' + this.options.appname);
     }
@@ -31,26 +29,34 @@ module.exports = class extends Generator {
       if (answers.AppName) {
         this.options.appname = answers.AppName;
       }
+      this.options.repo = answers.Repository;
       this.options.install = answers.ShouldInstall;
     });
   }
   _getPrompts() {
-    var namePrompt = {
+    let namePrompt = {
       type: 'input',
       name: 'AppName',
       message: 'App name: ',
       default: 'sample-app'
     };
-    var installPrompt = {
+    let repoPrompt = {
+      type: 'input',
+      name: 'Repository',
+      message: 'GitHub repo: ',
+      default: ''
+    };
+    let installPrompt = {
       type: 'confirm',
       name: 'ShouldInstall',
       message: 'Run npm install after setup?',
       default: true
     };
-    var prompts = [];
+    let prompts = [];
     if (!this.options.appname) {
       prompts.push(namePrompt);
     }
+    prompts.push(repoPrompt);
     prompts.push(installPrompt);
 
     return prompts;
@@ -63,34 +69,34 @@ module.exports = class extends Generator {
   default() {}
 
   writing() {
-    mkdirp(this.destinationPath(this.options.appname));
+    fse.mkdir(this.destinationPath(this.options.appname));
     this.destinationRoot(this.destinationPath(this.options.appname));
+    fse.copySync(this.templatePath(), this.destinationPath());
     this._writeTemplates();
-    this._writeDir();
   }
   _writeTemplates() {
+    fse.removeSync(this.destinationPath('README.md'));
     this.fs.copyTpl(
       this.templatePath('README.md'),
       this.destinationPath('README.md'),
       { appname: this.options.appname }
     );
     // select package.json based on project type
+    fse.removeSync(this.destinationPath('package.json'));
     this.fs.copyTpl(
       this.templatePath('package.json'),
       this.destinationPath('package.json'),
-      { appname: this.options.appname }
+      {
+        appname: this.options.appname,
+        repo: this.options.repo
+      }
     );
+    fse.removeSync(this.destinationPath('src/html/index.html'));
     this.fs.copyTpl(
       this.templatePath('src/html/index.html'),
       this.destinationPath('src/html/index.html'),
       { appname: this.options.appname }
     );
-  }
-  _writeDir() {
-    this.log(chalk.green('create') + ' dirs');
-    // recursively copy project structure
-    var opts = { 'clobber': false };
-    ncp(this.templatePath(), this.destinationPath(), opts, () => {});
   }
 
   // install dependencies based on project type
@@ -101,7 +107,7 @@ module.exports = class extends Generator {
   }
 
   end() {
-    var cmd;
+    let cmd;
     if (this.options.install) {
       cmd = 'cd ' + this.options.appname + ' && gulp';
     } else {
