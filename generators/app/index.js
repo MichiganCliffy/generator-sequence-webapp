@@ -69,33 +69,21 @@ module.exports = class extends Generator {
   default() {}
 
   writing() {
-    fse.mkdir(this.destinationPath(this.options.appname));
+    fse.mkdir(this.destinationPath(this.options.appname), () => {
+      this.log(chalk.green('create') + ' ' + this.destinationPath());
+    });
     this.destinationRoot(this.destinationPath(this.options.appname));
     fse.copySync(this.templatePath(), this.destinationPath());
-    this._writeTemplates();
+    this._writeTemplate('README.md', { appname: this.options.appname });
+    this._writeTemplate('package.json', { appname: this.options.appname, repo: this.options.repo });
+    this._writeTemplate('src/html/index.html', { appname: this.options.appname });
   }
-  _writeTemplates() {
-    fse.removeSync(this.destinationPath('README.md'));
+  _writeTemplate(filename, data) {
+    fse.removeSync(this.destinationPath(filename));
     this.fs.copyTpl(
-      this.templatePath('README.md'),
-      this.destinationPath('README.md'),
-      { appname: this.options.appname }
-    );
-    // select package.json based on project type
-    fse.removeSync(this.destinationPath('package.json'));
-    this.fs.copyTpl(
-      this.templatePath('package.json'),
-      this.destinationPath('package.json'),
-      {
-        appname: this.options.appname,
-        repo: this.options.repo
-      }
-    );
-    fse.removeSync(this.destinationPath('src/html/index.html'));
-    this.fs.copyTpl(
-      this.templatePath('src/html/index.html'),
-      this.destinationPath('src/html/index.html'),
-      { appname: this.options.appname }
+      this.templatePath(filename),
+      this.destinationPath(filename),
+      data
     );
   }
 
